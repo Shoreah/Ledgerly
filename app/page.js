@@ -1,6 +1,11 @@
 import Nav from "./components/Nav";
 import Hero from "./components/Hero";
 import Problem from "./components/Problem";
+import Features from "./components/Features";
+import HowItWorks from "./components/HowItWorks";
+import Testimonial from "./components/Testimonial";
+import Closer from "./components/Closer";
+import Footer from "./components/Footer";
 
 export default function Home() {
   return (
@@ -9,7 +14,11 @@ export default function Home() {
         <Nav />
         <Hero />
         <Problem />
-        {/* More components go here, one at a time */}
+        <Features />
+        <HowItWorks />
+        <Testimonial />
+        <Closer />
+        <Footer />
       </div>
     </main>
   );

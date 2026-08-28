@@ -12,8 +12,10 @@
   --margin: #ae4657;
   --ink: #1c2a22;
   --ink-soft: #58685c;
+  --ink-faint: #8b978c;
   --stamp: #a63d2f;
   --gold: #a7822e;
+  --ok: #3f6b4a;
   --border: rgba(28, 42, 34, 0.14);
 }
 
@@ -31,8 +33,10 @@
   --color-margin: var(--margin);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
   --color-stamp: var(--stamp);
   --color-gold: var(--gold);
+  --color-ok: var(--ok);
   --color-border: var(--border);
 
   /* Ledgerly fonts -> usable as font-serif, font-mono */
@@ -137,5 +141,23 @@ body {
     opacity: 1 !important;
     transform: none !important;
     animation: none !important;
+  }
+}
+
+/* Dashboard main area vertical rule (thinner offset than the marketing margin-rule) */
+.dashboard-rule::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 44px;
+  width: 2px;
+  height: 100%;
+  background: var(--margin);
+  opacity: 0.45;
+}
+
+@media (max-width: 860px) {
+  .dashboard-rule::before {
+    left: 16px;
   }
 }

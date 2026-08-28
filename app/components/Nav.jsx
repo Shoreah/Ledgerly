@@ -36,7 +36,7 @@ export default function Nav() {
           Log in
         </Link>
         <Link
-          href="#start"
+          href="/dashboard"
           className="inline-flex items-center gap-2 rounded border border-transparent bg-ink px-5 py-[11px] text-[14.5px] font-semibold text-paper hover:bg-[#0f1811] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-margin"
         >
           Open a ledger
