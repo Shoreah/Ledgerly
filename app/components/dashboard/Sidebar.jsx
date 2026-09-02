@@ -75,7 +75,7 @@ export default function Sidebar({ user }) {
       )}
 
       <aside
-        className={`z-50 flex h-screen w-[232px] flex-shrink-0 flex-col overflow-y-auto overscroll-contain border-r border-border bg-paper px-[18px] py-[26px] transition-transform duration-200 min-[861px]:sticky min-[861px]:top-0 min-[861px]:translate-x-0 max-[860px]:fixed max-[860px]:inset-y-0 max-[860px]:left-0 ${
+        className={`z-50 flex h-dvh w-[232px] flex-shrink-0 flex-col overflow-y-auto overscroll-contain border-r border-border bg-paper px-[18px] py-[26px] transition-transform duration-200 min-[861px]:sticky min-[861px]:top-0 min-[861px]:translate-x-0 max-[860px]:fixed max-[860px]:inset-y-0 max-[860px]:left-0 ${
           mobileOpen
             ? "max-[860px]:translate-x-0"
             : "max-[860px]:-translate-x-full"
@@ -126,7 +126,7 @@ export default function Sidebar({ user }) {
           );
         })}
 
-        <div className="mt-auto border-t border-border pt-3">
+        <div className="mt-auto border-t border-border pt-3 pb-[env(safe-area-inset-bottom)]">
           <div className="flex items-center gap-2.5 text-[13px] text-ink-soft">
             <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-ink font-mono text-xs text-paper">
               {initials}
