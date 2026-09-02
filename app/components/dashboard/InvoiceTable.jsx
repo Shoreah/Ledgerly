@@ -17,13 +17,25 @@ function actionLabel(status) {
 }
 
 export default function InvoiceTable() {
-  const { invoices, isLoading, loadError } = useDashboardData();
+  const { invoices, isLoading, loadError, deleteInvoice } = useDashboardData();
   const [filter, setFilter] = useState("all");
+  const [deletingId, setDeletingId] = useState(null);
 
   const visible =
     filter === "all"
       ? invoices
       : invoices.filter((invoice) => invoice.status === filter);
+
+  async function handleDelete(invoice) {
+    const confirmed = window.confirm(
+      `Delete the invoice for ${invoice.client}? This can't be undone.`,
+    );
+    if (!confirmed) return;
+
+    setDeletingId(invoice.id);
+    await deleteInvoice(invoice.id);
+    setDeletingId(null);
+  }
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-paper">
@@ -64,7 +76,7 @@ export default function InvoiceTable() {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] border-collapse">
+          <table className="w-full min-w-[760px] border-collapse">
             <thead>
               <tr>
                 {[
@@ -75,9 +87,10 @@ export default function InvoiceTable() {
                   "Status",
                   "Due",
                   "",
-                ].map((heading) => (
+                  "",
+                ].map((heading, i) => (
                   <th
-                    key={heading}
+                    key={i}
                     className="border-b border-border px-5 py-3 text-left font-mono text-[11px] uppercase tracking-[0.06em] text-ink-faint"
                   >
                     {heading}
@@ -109,6 +122,16 @@ export default function InvoiceTable() {
                   <td className="px-5 py-3.5 text-right">
                     <button className="font-mono text-[12.5px] text-ink-soft hover:text-ink hover:underline">
                       {actionLabel(row.status)}
+                    </button>
+                  </td>
+                  <td className="px-5 py-3.5 text-right">
+                    <button
+                      onClick={() => handleDelete(row)}
+                      disabled={deletingId === row.id}
+                      aria-label="Delete invoice"
+                      className="font-mono text-[12.5px] text-ink-faint hover:text-stamp disabled:opacity-50"
+                    >
+                      {deletingId === row.id ? "..." : "Delete"}
                     </button>
                   </td>
                 </tr>

@@ -174,22 +174,68 @@ export function DashboardDataProvider({ children }) {
     await loadData();
   }
 
-  const clients = useMemo(() => {
-    const map = new Map();
-    for (const invoice of invoices) {
-      const entry = map.get(invoice.client) || {
-        name: invoice.client,
-        invoiceCount: 0,
-        balanceUSD: 0,
-      };
-      entry.invoiceCount += 1;
-      if (invoice.status !== "paid") {
-        entry.balanceUSD += toUSD(invoice.total, invoice.currency);
-      }
-      map.set(invoice.client, entry);
+  async function deleteInvoice(invoiceId) {
+    setSaveError(null);
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("invoices")
+      .delete()
+      .eq("id", invoiceId);
+
+    if (error) {
+      setSaveError(error.message);
+      return;
     }
-    return Array.from(map.values());
-  }, [invoices]);
+
+    await loadData();
+  }
+
+  async function deleteClient(clientId) {
+    setSaveError(null);
+    const supabase = createClient();
+
+    const { error: invoicesError } = await supabase
+      .from("invoices")
+      .delete()
+      .eq("client_id", clientId);
+
+    if (invoicesError) {
+      setSaveError(invoicesError.message);
+      return;
+    }
+
+    const { error: clientError } = await supabase
+      .from("clients")
+      .delete()
+      .eq("id", clientId);
+
+    if (clientError) {
+      setSaveError(clientError.message);
+      return;
+    }
+
+    await loadData();
+  }
+
+  const clients = useMemo(() => {
+    return realClients.map((client) => {
+      const clientInvoices = invoices.filter(
+        (invoice) => invoice.clientId === client.id,
+      );
+      const balanceUSD = clientInvoices.reduce((sum, invoice) => {
+        if (invoice.status === "paid") return sum;
+        return sum + toUSD(invoice.total, invoice.currency);
+      }, 0);
+
+      return {
+        id: client.id,
+        name: client.name,
+        invoiceCount: clientInvoices.length,
+        balanceUSD,
+      };
+    });
+  }, [invoices, realClients]);
 
   const stats = useMemo(() => {
     const sentInvoices = invoices.filter((i) => i.status === "sent");
@@ -217,6 +263,8 @@ export function DashboardDataProvider({ children }) {
     saveError,
     stats,
     addInvoice,
+    deleteInvoice,
+    deleteClient,
     isModalOpen,
     openModal: () => setIsModalOpen(true),
     closeModal: () => setIsModalOpen(false),

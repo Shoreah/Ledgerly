@@ -1,12 +1,30 @@
 "use client";
 
+import { useState } from "react";
 import {
   useDashboardData,
   formatMoney,
 } from "../../components/dashboard/DashboardDataContext";
 
 export default function ClientsPage() {
-  const { clients, isLoading, loadError } = useDashboardData();
+  const { clients, isLoading, loadError, deleteClient } = useDashboardData();
+  const [deletingId, setDeletingId] = useState(null);
+
+  async function handleDelete(client) {
+    const warning =
+      client.invoiceCount > 0
+        ? `Delete ${client.name} and all ${client.invoiceCount} of their invoice${
+            client.invoiceCount === 1 ? "" : "s"
+          }? This can't be undone.`
+        : `Delete ${client.name}? This can't be undone.`;
+
+    const confirmed = window.confirm(warning);
+    if (!confirmed) return;
+
+    setDeletingId(client.id);
+    await deleteClient(client.id);
+    setDeletingId(null);
+  }
 
   return (
     <>
@@ -19,6 +37,9 @@ export default function ClientsPage() {
             Clients
           </h1>
         </div>
+        <button className="inline-flex items-center gap-2 rounded border border-border px-[18px] py-2.5 text-sm font-semibold text-ink hover:border-ink">
+          + Add client
+        </button>
       </div>
 
       {isLoading ? (
@@ -38,11 +59,21 @@ export default function ClientsPage() {
         <div className="grid grid-cols-3 gap-3.5 max-[900px]:grid-cols-2 max-[620px]:grid-cols-1">
           {clients.map((client) => (
             <div
-              key={client.name}
+              key={client.id}
               className="rounded-[7px] border border-border bg-paper px-5 py-[18px]"
             >
-              <div className="mb-1 text-[15.5px] font-semibold text-ink">
-                {client.name}
+              <div className="mb-1 flex items-start justify-between gap-2">
+                <div className="text-[15.5px] font-semibold text-ink">
+                  {client.name}
+                </div>
+                <button
+                  onClick={() => handleDelete(client)}
+                  disabled={deletingId === client.id}
+                  aria-label={`Delete ${client.name}`}
+                  className="font-mono text-[11.5px] text-ink-faint hover:text-stamp disabled:opacity-50"
+                >
+                  {deletingId === client.id ? "..." : "Delete"}
+                </button>
               </div>
               <div className="mb-3.5 text-[12.5px] text-ink-soft">
                 {client.invoiceCount} invoice
