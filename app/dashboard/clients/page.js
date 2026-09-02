@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ConfirmDialog from "../../components/dashboard/ConfirmDialog";
 import {
   useDashboardData,
   formatMoney,
@@ -8,23 +9,32 @@ import {
 
 export default function ClientsPage() {
   const { clients, isLoading, loadError, deleteClient } = useDashboardData();
-  const [deletingId, setDeletingId] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  async function handleDelete(client) {
-    const warning =
-      client.invoiceCount > 0
-        ? `Delete ${client.name} and all ${client.invoiceCount} of their invoice${
-            client.invoiceCount === 1 ? "" : "s"
-          }? This can't be undone.`
-        : `Delete ${client.name}? This can't be undone.`;
-
-    const confirmed = window.confirm(warning);
-    if (!confirmed) return;
-
-    setDeletingId(client.id);
-    await deleteClient(client.id);
-    setDeletingId(null);
+  function requestDelete(client) {
+    setPendingDelete(client);
   }
+
+  function cancelDelete() {
+    setPendingDelete(null);
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    setIsDeleting(true);
+    await deleteClient(pendingDelete.id);
+    setIsDeleting(false);
+    setPendingDelete(null);
+  }
+
+  const warningMessage = pendingDelete
+    ? pendingDelete.invoiceCount > 0
+      ? `Delete ${pendingDelete.name} and all ${pendingDelete.invoiceCount} of their invoice${
+          pendingDelete.invoiceCount === 1 ? "" : "s"
+        }? This can't be undone.`
+      : `Delete ${pendingDelete.name}? This can't be undone.`
+    : "";
 
   return (
     <>
@@ -67,12 +77,11 @@ export default function ClientsPage() {
                   {client.name}
                 </div>
                 <button
-                  onClick={() => handleDelete(client)}
-                  disabled={deletingId === client.id}
+                  onClick={() => requestDelete(client)}
                   aria-label={`Delete ${client.name}`}
-                  className="font-mono text-[11.5px] text-ink-faint hover:text-stamp disabled:opacity-50"
+                  className="font-mono text-[11.5px] text-ink-faint hover:text-stamp"
                 >
-                  {deletingId === client.id ? "..." : "Delete"}
+                  Delete
                 </button>
               </div>
               <div className="mb-3.5 text-[12.5px] text-ink-soft">
@@ -95,6 +104,16 @@ export default function ClientsPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingDelete !== null}
+        title="Delete client"
+        message={warningMessage}
+        confirmLabel="Delete client"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        isLoading={isDeleting}
+      />
     </>
   );
 }

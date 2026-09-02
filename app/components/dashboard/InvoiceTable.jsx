@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import StatusBadge from "./StatusBadge";
+import ConfirmDialog from "./ConfirmDialog";
 import {
   useDashboardData,
   formatMoney,
@@ -19,22 +20,28 @@ function actionLabel(status) {
 export default function InvoiceTable() {
   const { invoices, isLoading, loadError, deleteInvoice } = useDashboardData();
   const [filter, setFilter] = useState("all");
-  const [deletingId, setDeletingId] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const visible =
     filter === "all"
       ? invoices
       : invoices.filter((invoice) => invoice.status === filter);
 
-  async function handleDelete(invoice) {
-    const confirmed = window.confirm(
-      `Delete the invoice for ${invoice.client}? This can't be undone.`,
-    );
-    if (!confirmed) return;
+  function requestDelete(invoice) {
+    setPendingDelete(invoice);
+  }
 
-    setDeletingId(invoice.id);
-    await deleteInvoice(invoice.id);
-    setDeletingId(null);
+  function cancelDelete() {
+    setPendingDelete(null);
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    setIsDeleting(true);
+    await deleteInvoice(pendingDelete.id);
+    setIsDeleting(false);
+    setPendingDelete(null);
   }
 
   return (
@@ -126,12 +133,11 @@ export default function InvoiceTable() {
                   </td>
                   <td className="px-5 py-3.5 text-right">
                     <button
-                      onClick={() => handleDelete(row)}
-                      disabled={deletingId === row.id}
+                      onClick={() => requestDelete(row)}
                       aria-label="Delete invoice"
-                      className="font-mono text-[12.5px] text-ink-faint hover:text-stamp disabled:opacity-50"
+                      className="font-mono text-[12.5px] text-ink-faint hover:text-stamp"
                     >
-                      {deletingId === row.id ? "..." : "Delete"}
+                      Delete
                     </button>
                   </td>
                 </tr>
@@ -140,6 +146,20 @@ export default function InvoiceTable() {
           </table>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingDelete !== null}
+        title="Delete invoice"
+        message={
+          pendingDelete
+            ? `Delete the invoice for ${pendingDelete.client}? This can't be undone.`
+            : ""
+        }
+        confirmLabel="Delete invoice"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
