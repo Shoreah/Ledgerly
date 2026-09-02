@@ -19,9 +19,6 @@ export default function ClientsPage() {
             Clients
           </h1>
         </div>
-        <button className="inline-flex items-center gap-2 rounded border border-border px-[18px] py-2.5 text-sm font-semibold text-ink hover:border-ink">
-          + Add client
-        </button>
       </div>
 
       {isLoading ? (
