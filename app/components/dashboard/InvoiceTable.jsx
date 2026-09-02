@@ -63,57 +63,59 @@ export default function InvoiceTable() {
           No invoices match this filter.
         </div>
       ) : (
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              {[
-                "No.",
-                "Client",
-                "Description",
-                "Amount",
-                "Status",
-                "Due",
-                "",
-              ].map((heading) => (
-                <th
-                  key={heading}
-                  className="border-b border-border px-5 py-3 text-left font-mono text-[11px] uppercase tracking-[0.06em] text-ink-faint"
-                >
-                  {heading}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-dashed divide-border">
-            {visible.map((row) => (
-              <tr key={row.id} className="hover:bg-ink/[0.03]">
-                <td className="px-5 py-3.5 font-mono text-[13px] text-ink-soft">
-                  {row.no}
-                </td>
-                <td className="px-5 py-3.5 text-[14.5px] font-medium text-ink">
-                  {row.client}
-                </td>
-                <td className="px-5 py-3.5 text-[14.5px] text-ink">
-                  {describeInvoice(row)}
-                </td>
-                <td className="px-5 py-3.5 font-mono text-[14.5px] font-semibold text-ink">
-                  {formatMoney(row.total, row.currency)}
-                </td>
-                <td className="px-5 py-3.5">
-                  <StatusBadge status={row.status} />
-                </td>
-                <td className="px-5 py-3.5 text-[13.5px] text-ink-soft">
-                  {row.date}
-                </td>
-                <td className="px-5 py-3.5 text-right">
-                  <button className="font-mono text-[12.5px] text-ink-soft hover:text-ink hover:underline">
-                    {actionLabel(row.status)}
-                  </button>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] border-collapse">
+            <thead>
+              <tr>
+                {[
+                  "No.",
+                  "Client",
+                  "Description",
+                  "Amount",
+                  "Status",
+                  "Due",
+                  "",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="border-b border-border px-5 py-3 text-left font-mono text-[11px] uppercase tracking-[0.06em] text-ink-faint"
+                  >
+                    {heading}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-dashed divide-border">
+              {visible.map((row) => (
+                <tr key={row.id} className="hover:bg-ink/[0.03]">
+                  <td className="px-5 py-3.5 font-mono text-[13px] text-ink-soft">
+                    {row.no}
+                  </td>
+                  <td className="px-5 py-3.5 text-[14.5px] font-medium text-ink">
+                    {row.client}
+                  </td>
+                  <td className="px-5 py-3.5 text-[14.5px] text-ink">
+                    {describeInvoice(row)}
+                  </td>
+                  <td className="px-5 py-3.5 font-mono text-[14.5px] font-semibold text-ink">
+                    {formatMoney(row.total, row.currency)}
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <StatusBadge status={row.status} />
+                  </td>
+                  <td className="px-5 py-3.5 text-[13.5px] text-ink-soft">
+                    {row.date}
+                  </td>
+                  <td className="px-5 py-3.5 text-right">
+                    <button className="font-mono text-[12.5px] text-ink-soft hover:text-ink hover:underline">
+                      {actionLabel(row.status)}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
