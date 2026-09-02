@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -18,6 +18,17 @@ export default function Sidebar({ user }) {
 
   const email = user?.email ?? "";
   const initials = email ? email.slice(0, 2).toUpperCase() : "??";
+
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   async function handleLogout() {
     const supabase = createClient();
@@ -64,7 +75,7 @@ export default function Sidebar({ user }) {
       )}
 
       <aside
-        className={`z-50 flex h-screen w-[232px] flex-shrink-0 flex-col overflow-y-auto border-r border-border bg-paper px-[18px] py-[26px] transition-transform duration-200 min-[861px]:sticky min-[861px]:top-0 min-[861px]:translate-x-0 max-[860px]:fixed max-[860px]:inset-y-0 max-[860px]:left-0 ${
+        className={`z-50 flex h-screen w-[232px] flex-shrink-0 flex-col overflow-y-auto overscroll-contain border-r border-border bg-paper px-[18px] py-[26px] transition-transform duration-200 min-[861px]:sticky min-[861px]:top-0 min-[861px]:translate-x-0 max-[860px]:fixed max-[860px]:inset-y-0 max-[860px]:left-0 ${
           mobileOpen
             ? "max-[860px]:translate-x-0"
             : "max-[860px]:-translate-x-full"
