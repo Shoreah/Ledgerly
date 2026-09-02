@@ -17,7 +17,7 @@ function actionLabel(status) {
 }
 
 export default function InvoiceTable() {
-  const { invoices } = useDashboardData();
+  const { invoices, isLoading, loadError } = useDashboardData();
   const [filter, setFilter] = useState("all");
 
   const visible =
@@ -46,7 +46,15 @@ export default function InvoiceTable() {
         </div>
       </div>
 
-      {invoices.length === 0 ? (
+      {isLoading ? (
+        <div className="px-5 py-14 text-center text-[14.5px] text-ink-soft">
+          Loading your invoices...
+        </div>
+      ) : loadError ? (
+        <div className="px-5 py-14 text-center text-[14.5px] text-stamp">
+          Couldn't load your invoices. {loadError}
+        </div>
+      ) : invoices.length === 0 ? (
         <div className="px-5 py-14 text-center text-[14.5px] text-ink-soft">
           No invoices yet. Create one from the button above.
         </div>

@@ -23,7 +23,8 @@ function StatCard({ label, value, valueClass = "", sub }) {
 }
 
 export default function OverviewPage() {
-  const { invoices, stats, openModal } = useDashboardData();
+  const { invoices, stats, openModal, isLoading, loadError } =
+    useDashboardData();
   const recentActivity = invoices.slice(0, 4);
 
   return (
@@ -43,30 +44,36 @@ export default function OverviewPage() {
       <div className="mb-[34px] grid grid-cols-4 gap-3.5 max-[780px]:grid-cols-2">
         <StatCard
           label="Outstanding"
-          value={formatMoney(stats.outstandingUSD, "USD")}
-          sub={`Across ${stats.outstandingCount} invoice${
-            stats.outstandingCount === 1 ? "" : "s"
-          }`}
+          value={isLoading ? "—" : formatMoney(stats.outstandingUSD, "USD")}
+          sub={
+            isLoading
+              ? "Loading..."
+              : `Across ${stats.outstandingCount} invoice${
+                  stats.outstandingCount === 1 ? "" : "s"
+                }`
+          }
         />
         <StatCard
           label="Paid this month"
           valueClass="text-ok"
-          value={formatMoney(stats.paidUSD, "USD")}
-          sub={`${stats.paidCount} invoices settled`}
+          value={isLoading ? "—" : formatMoney(stats.paidUSD, "USD")}
+          sub={isLoading ? "Loading..." : `${stats.paidCount} invoices settled`}
         />
         <StatCard
           label="Overdue"
           valueClass="text-stamp"
-          value={formatMoney(stats.overdueUSD, "USD")}
+          value={isLoading ? "—" : formatMoney(stats.overdueUSD, "USD")}
           sub={
-            stats.overdueCount
-              ? `${stats.overdueCount} invoice, past due`
-              : "Nothing overdue"
+            isLoading
+              ? "Loading..."
+              : stats.overdueCount
+                ? `${stats.overdueCount} invoice, past due`
+                : "Nothing overdue"
           }
         />
         <StatCard
           label="Drafts"
-          value={String(stats.drafts)}
+          value={isLoading ? "—" : String(stats.drafts)}
           sub="Not yet sent"
         />
       </div>
@@ -82,7 +89,15 @@ export default function OverviewPage() {
           </a>
         </div>
 
-        {recentActivity.length === 0 ? (
+        {isLoading ? (
+          <div className="px-5 py-14 text-center text-[14.5px] text-ink-soft">
+            Loading your invoices...
+          </div>
+        ) : loadError ? (
+          <div className="px-5 py-14 text-center text-[14.5px] text-stamp">
+            Couldn't load your invoices. {loadError}
+          </div>
+        ) : recentActivity.length === 0 ? (
           <div className="px-5 py-14 text-center text-[14.5px] text-ink-soft">
             No invoices yet.{" "}
             <button

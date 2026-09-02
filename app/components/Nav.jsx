@@ -30,13 +30,13 @@ export default function Nav() {
           Pricing
         </Link>
         <Link
-          href="#"
+          href="/login"
           className="hidden text-ink-soft hover:text-ink sm:inline"
         >
           Log in
         </Link>
         <Link
-          href="/dashboard"
+          href="/signup"
           className="inline-flex items-center gap-2 rounded border border-transparent bg-ink px-5 py-[11px] text-[14.5px] font-semibold text-paper hover:bg-[#0f1811] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-margin"
         >
           Open a ledger

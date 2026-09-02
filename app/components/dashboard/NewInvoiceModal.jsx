@@ -11,9 +11,13 @@ function emptyLine() {
   return { id: crypto.randomUUID(), description: "", amount: "" };
 }
 
+const NEW_CLIENT_VALUE = "__new__";
+
 export default function NewInvoiceModal() {
-  const { isModalOpen, closeModal, addInvoice } = useDashboardData();
-  const [client, setClient] = useState("");
+  const { isModalOpen, closeModal, addInvoice, realClients, saveError } =
+    useDashboardData();
+  const [clientId, setClientId] = useState("");
+  const [newClientName, setNewClientName] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [lineItems, setLineItems] = useState([emptyLine()]);
 
@@ -23,6 +27,8 @@ export default function NewInvoiceModal() {
     (sum, item) => sum + (parseFloat(item.amount) || 0),
     0,
   );
+
+  const isAddingNewClient = clientId === NEW_CLIENT_VALUE;
 
   function updateLine(id, field, value) {
     setLineItems((prev) =>
@@ -39,19 +45,27 @@ export default function NewInvoiceModal() {
   }
 
   function resetAndClose() {
-    setClient("");
+    setClientId("");
+    setNewClientName("");
     setCurrency("USD");
     setLineItems([emptyLine()]);
     closeModal();
   }
 
-  function handleSave(status) {
+  async function handleSave(status) {
     const validLines = lineItems.filter(
       (line) => line.description.trim() && parseFloat(line.amount) > 0,
     );
-    if (!client.trim() || validLines.length === 0) return;
-    addInvoice({
-      client: client.trim(),
+
+    const hasClient = isAddingNewClient
+      ? newClientName.trim().length > 0
+      : clientId.length > 0;
+
+    if (!hasClient || validLines.length === 0) return;
+
+    await addInvoice({
+      clientId: isAddingNewClient ? null : clientId,
+      newClientName: isAddingNewClient ? newClientName.trim() : null,
       currency,
       lineItems: validLines,
       status,
@@ -85,13 +99,32 @@ export default function NewInvoiceModal() {
             <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.05em] text-ink-soft">
               Client
             </label>
-            <input
-              type="text"
-              value={client}
-              onChange={(e) => setClient(e.target.value)}
-              placeholder="e.g. Marlowe & Co."
+            <select
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
               className="w-full rounded-[5px] border border-border bg-white px-[11px] py-[9px] text-[14.5px] text-ink focus:border-margin focus:outline-none"
-            />
+            >
+              <option value="" disabled>
+                Select a client
+              </option>
+              {realClients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name}
+                </option>
+              ))}
+              <option value={NEW_CLIENT_VALUE}>+ Add new client</option>
+            </select>
+
+            {isAddingNewClient && (
+              <input
+                type="text"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+                placeholder="New client name"
+                className="mt-2 w-full rounded-[5px] border border-border bg-white px-[11px] py-[9px] text-[14.5px] text-ink focus:border-margin focus:outline-none"
+                autoFocus
+              />
+            )}
           </div>
 
           <div className="mb-4">
@@ -171,6 +204,10 @@ export default function NewInvoiceModal() {
               {formatMoney(total, currency)}
             </span>
           </div>
+
+          {saveError && (
+            <p className="mt-3 text-[13.5px] text-stamp">{saveError}</p>
+          )}
         </div>
 
         <div className="flex justify-end gap-2.5 border-t border-border px-6 py-[18px]">

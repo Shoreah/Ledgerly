@@ -22,7 +22,7 @@ export default function Hero() {
 
         <div className="mb-[26px] flex flex-wrap gap-3.5">
           <a
-            href="/dashboard"
+            href="/signup"
             className="inline-flex items-center gap-2 rounded border border-transparent bg-stamp px-5 py-[11px] text-[14.5px] font-semibold text-[#FCF3EE] hover:bg-[#8f3427] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-margin"
           >
             Start your first ledger

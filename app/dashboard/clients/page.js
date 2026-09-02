@@ -6,7 +6,7 @@ import {
 } from "../../components/dashboard/DashboardDataContext";
 
 export default function ClientsPage() {
-  const { clients } = useDashboardData();
+  const { clients, isLoading, loadError } = useDashboardData();
 
   return (
     <>
@@ -24,7 +24,15 @@ export default function ClientsPage() {
         </button>
       </div>
 
-      {clients.length === 0 ? (
+      {isLoading ? (
+        <div className="rounded-lg border border-dashed border-border bg-paper px-5 py-14 text-center text-[14.5px] text-ink-soft">
+          Loading your clients...
+        </div>
+      ) : loadError ? (
+        <div className="rounded-lg border border-dashed border-border bg-paper px-5 py-14 text-center text-[14.5px] text-stamp">
+          Couldn't load your clients. {loadError}
+        </div>
+      ) : clients.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-paper px-5 py-14 text-center text-[14.5px] text-ink-soft">
           No clients yet. They&apos;ll show up here once you create an invoice
           for them.

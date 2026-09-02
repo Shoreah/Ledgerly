@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 const DashboardDataContext = createContext(null);
 
@@ -9,9 +10,6 @@ export const CURRENCIES = {
   NGN: { symbol: "₦", label: "Nigerian Naira (NGN)" },
 };
 
-// Static rate used only to roll mixed-currency invoices into one reporting
-// number for the Overview stat cards. Swap for a live rate once this is
-// wired up to a currency API.
 const NGN_PER_USD = 1500;
 
 function toUSD(amount, currency) {
@@ -33,36 +31,147 @@ export function describeInvoice(invoice) {
   } more`;
 }
 
+function mapInvoiceRow(row, index) {
+  const lineItems = (row.invoice_line_items || []).map((line) => ({
+    id: line.id,
+    description: line.description,
+    amount: Number(line.quantity) * Number(line.unit_price),
+  }));
+
+  const total = lineItems.reduce((sum, item) => sum + item.amount, 0);
+
+  return {
+    id: row.id,
+    no: String(index + 1).padStart(3, "0"),
+    client: row.clients?.name ?? "Unknown client",
+    clientId: row.client_id,
+    currency: row.currency,
+    lineItems,
+    total,
+    status: row.status,
+    date:
+      row.status === "sent"
+        ? new Date(row.created_at).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          })
+        : "Not sent",
+  };
+}
+
 export function DashboardDataProvider({ children }) {
   const [invoices, setInvoices] = useState([]);
+  const [realClients, setRealClients] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [saveError, setSaveError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  function addInvoice({ client, currency, lineItems, status }) {
-    const total = lineItems.reduce(
-      (sum, item) => sum + (parseFloat(item.amount) || 0),
-      0,
-    );
+  async function loadData() {
+    setIsLoading(true);
+    setLoadError(null);
 
-    setInvoices((prev) => {
-      const no = String(prev.length + 1).padStart(3, "0");
-      const invoice = {
-        id: crypto.randomUUID(),
-        no,
-        client,
+    const supabase = createClient();
+
+    const [invoicesResult, clientsResult] = await Promise.all([
+      supabase
+        .from("invoices")
+        .select(
+          "*, clients(name), invoice_line_items(id, description, quantity, unit_price)",
+        )
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("clients")
+        .select("*")
+        .order("created_at", { ascending: true }),
+    ]);
+
+    if (invoicesResult.error || clientsResult.error) {
+      setLoadError(
+        invoicesResult.error?.message || clientsResult.error?.message,
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    setInvoices(invoicesResult.data.map(mapInvoiceRow));
+    setRealClients(clientsResult.data);
+    setIsLoading(false);
+  }
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function addInvoice({
+    clientId,
+    newClientName,
+    currency,
+    lineItems,
+    status,
+  }) {
+    setSaveError(null);
+    const supabase = createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setSaveError("You must be logged in to create an invoice.");
+      return;
+    }
+
+    let finalClientId = clientId;
+
+    if (!finalClientId && newClientName) {
+      const { data: newClient, error: clientError } = await supabase
+        .from("clients")
+        .insert({ user_id: user.id, name: newClientName })
+        .select()
+        .single();
+
+      if (clientError) {
+        setSaveError(clientError.message);
+        return;
+      }
+
+      finalClientId = newClient.id;
+    }
+
+    const { data: newInvoice, error: invoiceError } = await supabase
+      .from("invoices")
+      .insert({
+        user_id: user.id,
+        client_id: finalClientId,
         currency,
-        lineItems,
-        total,
         status,
-        date:
-          status === "sent"
-            ? new Date().toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              })
-            : "Not sent",
-      };
-      return [invoice, ...prev];
-    });
+      })
+      .select()
+      .single();
+
+    if (invoiceError) {
+      setSaveError(invoiceError.message);
+      return;
+    }
+
+    const lineItemRows = lineItems.map((item) => ({
+      invoice_id: newInvoice.id,
+      description: item.description,
+      quantity: 1,
+      unit_price: parseFloat(item.amount) || 0,
+    }));
+
+    const { error: lineItemsError } = await supabase
+      .from("invoice_line_items")
+      .insert(lineItemRows);
+
+    if (lineItemsError) {
+      setSaveError(lineItemsError.message);
+      return;
+    }
+
+    await loadData();
   }
 
   const clients = useMemo(() => {
@@ -91,8 +200,6 @@ export function DashboardDataProvider({ children }) {
         0,
       ),
       outstandingCount: sentInvoices.length,
-      // Paid and overdue aren't reachable yet without payment processing or
-      // due-date tracking, both land in a later phase.
       paidUSD: 0,
       paidCount: 0,
       overdueUSD: 0,
@@ -104,6 +211,10 @@ export function DashboardDataProvider({ children }) {
   const value = {
     invoices,
     clients,
+    realClients,
+    isLoading,
+    loadError,
+    saveError,
     stats,
     addInvoice,
     isModalOpen,

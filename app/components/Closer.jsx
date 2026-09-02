@@ -12,7 +12,7 @@ export default function Closer() {
         </div>
 
         <a
-          href="/dashboard"
+          href="/signup"
           className="inline-flex items-center gap-2 whitespace-nowrap rounded border border-transparent bg-stamp px-5 py-[11px] text-[14.5px] font-semibold text-[#FCF3EE] hover:bg-[#8f3427] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-margin"
         >
           Open a ledger, it&apos;s free
